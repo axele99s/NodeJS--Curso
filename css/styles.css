@@ -1,0 +1,42 @@
+.main-navbar{
+    background-color: royalblue;
+}
+
+.main-carousel{
+
+    background-color: yellow;
+    
+
+    img{
+        /* height: 400px; */
+        aspect-ratio: 16/9;
+        object-fit: cover; /* ajusta la imagen a que no e deforme*/
+    }
+}
+
+.info-img{
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+}
+
+.section-products{
+        padding: 2.5rem 1rem;
+        background-color: gray;
+}
+.section-title{
+    
+    font-size: 2rem;
+    text-transform: uppercase;
+    border-bottom:2px solid dodgerblue;
+    max-width: fit-content; /* el ANCHO se ajusta al texto (queda un "bloque" que cubre al tesxto */
+    margin: 0 auto 2rem;
+    padding-bottom: .5rem;
+    
+}
+
+.products-container{
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(min(100%,200px),1fr));
+    gap: 1rem;
+}
