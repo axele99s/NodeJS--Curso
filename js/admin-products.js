@@ -59,10 +59,11 @@ const games = [
 
 
 const gamesForm = document.getElementById("gamesForm");
-
 const tableBody = document.getElementById("tableBody");
 
-const deleteBtns = document.querySelector(".btn-danger");
+const searchInput = document.querySelector("#searchInput");
+const categorySelect = document.querySelector("#categoryFilter");
+const sortBtn = document.querySelectorAll("[data-ord]");
 
 gamesForm.addEventListener("submit",(formulario) => {
   formulario.preventDefault();
@@ -77,15 +78,29 @@ gamesForm.addEventListener("submit",(formulario) => {
   })
 
   buildTable(games);
-
+  Swal.fire({
+    icon: "success",
+    title: "Carga correcta!",
+    text: "Juego cargado correctamente.",
+    toast: true,
+    theme: "dark"
+    })
   })
-
-
-
  
 function buildTable(arrayJuegos){
     tableBody.innerHTML="";
 
+    if(arrayJuegos.length===0){
+      tableBody.innerHTML= `
+      <tr>
+
+      <td colspan="6" class="text-center">
+      <h3 class="text-secondary"> No hay juegos disponibles </h3>
+      </td>
+      </tr>`
+      return;
+    }
+    
     arrayJuegos.forEach((juego) => {
     tableBody.innerHTML += ` <tr>
                                 <td class="cell-image">
@@ -95,7 +110,11 @@ function buildTable(arrayJuegos){
                                         class="img-fluid"
                                     />
                                 </td>
-                                <td class="cell-name">${juego.name} </td>
+                                <td class="cell-name">
+                                <a onclick="showDialog(${juego.id})">${juego.name} 
+                                </a>                                
+                                
+                                </td>
                                 <td class="cell-category">${juego.category}</td>
                                 <td class="cell-price">${juego.price}</td>
                                 <td class="cell-date">${juego.createdAt}</td>
@@ -118,10 +137,79 @@ function deleteGame(id){
   const indice = games.findIndex(juego =>{
     return juego.id===id;
   })
-
-  games.splice(indice,1);
-
-  buildTable(games);
+  const confirmed = confirm("Estas seguro que desear eliminar el juego?");
+  if(confirmed) {
+    games.splice(indice,1);
+    buildTable(games);
+  }
+  
 }
 
 buildTable(games);
+
+// search input, para buscar juegos
+searchInput.addEventListener("keyup",(evento)=>{
+  const inputValue = searchInput.value;
+  
+  const filteredGames = games.filter((juego)=>{
+    if(juego.name.toLowerCase().includes(inputValue.toLowerCase())) return true; 
+  }
+  );
+
+  buildTable(filteredGames);
+
+})
+
+
+// category filter
+categorySelect.addEventListener("change",(evento)=>{
+  if(categorySelect.value===""){
+    buildTable(games);
+    return;
+  }
+  const filteredGames = games.filter((juego)=>{
+    if(juego.category.toLowerCase()===categorySelect.value.toLowerCase()) return true ;
+  })
+  buildTable(filteredGames);
+})
+
+sortBtn.forEach((btn)=>{
+  
+  btn.addEventListener("click",(evento)=>{
+
+    const dataSort = evento.currentTarget.dataset.ord;
+
+    if(dataSort==="reset"){
+      buildTable(games);
+      return;
+    }
+    const sortedGames = games.toSorted((a,b)=>{
+      if(dataSort==="asc") {
+        return a.price - b.price;
+      }
+      return b.price-a.price;
+    })
+    buildTable(sortedGames);
+  })
+  
+})
+
+
+function showDialog(id){
+
+  const juego = games.find((jueguito) =>{
+    console.log(jueguito.id);
+    return jueguito.id === id;
+  })
+
+  const dialog = document.getElementById("gameDetail");
+  const myModal = new bootstrap.Modal(dialog);
+
+  myModal.show();
+
+  
+
+}
+
+
+
