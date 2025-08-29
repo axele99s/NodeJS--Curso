@@ -57,13 +57,14 @@ const games = [
   
 ];
 
-
+import {formatDate} from './date-utils.js';
 const gamesForm = document.getElementById("gamesForm");
 const tableBody = document.getElementById("tableBody");
 
 const searchInput = document.querySelector("#searchInput");
 const categorySelect = document.querySelector("#categoryFilter");
 const sortBtn = document.querySelectorAll("[data-ord]");
+const aBtnDialog = document.querySelectorAll(".cell-name a");
 
 gamesForm.addEventListener("submit",(formulario) => {
   formulario.preventDefault();
@@ -111,27 +112,30 @@ function buildTable(arrayJuegos){
                                     />
                                 </td>
                                 <td class="cell-name">
-                                <a onclick="showDialog(${juego.id})">${juego.name} 
-                                </a>                                
+                                <a id="a-name" data-id="${juego.id}" >${juego.name}         </a>                                
                                 
                                 </td>
                                 <td class="cell-category">${juego.category}</td>
                                 <td class="cell-price">${juego.price}</td>
-                                <td class="cell-date">${juego.createdAt}</td>
+                                <td class="cell-date">${formatDate(juego.createdAt)}</td>
                                 <td class="cell-actions">
                                     <button class="btn btn-primary btn-sm">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
-                                    <button class="btn btn-danger btn-sm">
-                                        <i class="fa-solid fa-trash-can" onclick="deleteGame(${juego.id})"></i>
+                                    <button class="btn btn-danger btn-sm" data-id="${juego.id}">
+                                        <i class="fa-solid fa-trash-can")"></i>
                                     </button>
                                 </td>
 
                                 </td>
                             </tr>`
+
                         
-} )
+    });
+    getADialogButton();
+    getDeleteGameBtn();
   }
+
 
 function deleteGame(id){
   const indice = games.findIndex(juego =>{
@@ -198,18 +202,66 @@ sortBtn.forEach((btn)=>{
 function showDialog(id){
 
   const juego = games.find((jueguito) =>{
-    console.log(jueguito.id);
+    
     return jueguito.id === id;
   })
 
-  const dialog = document.getElementById("gameDetail");
-  const myModal = new bootstrap.Modal(dialog);
+  Swal.fire({
+    title: juego.name,
+    /*color: "#fff",
+    text: juego.description,
+    imageAlt: juego.name,
+    background: "#333",*/
+    html: `
+          <div class="product-dialog">
+        <div class="image-container">
+            <img src="${juego.image}" alt="${juego.name}">
 
-  myModal.show();
+        </div>
 
+        <div class="details-container">
+            
+            <div class="category-item">${juego.category}</div>
+            <div class="description">${juego.description}</div>
+            <div class="price">${juego.price}</div>
+            
+            <div class="footer-wrapper">
+                <div class="date">${formatDate(juego.createdAt)}</div>
+                <button class="btn btn-primary">Editar</button>
+            </div>
+        </div>
+    </div>
+           `,
+    theme: "dark"
+  })
   
 
 }
 
 
 
+
+
+function getADialogButton(){
+  const aBtnDialog = document.querySelectorAll(".cell-name a");
+  //console.log(aBtnDialog);
+  console.log();
+  aBtnDialog.forEach((a_etiqueta)=>{
+      a_etiqueta.addEventListener("click",(evento)=>{
+        evento.stopPropagation();
+        const id = parseInt(a_etiqueta.dataset.id);
+        showDialog(id);
+  })
+})
+}
+
+function getDeleteGameBtn(){
+  const deleteGameBtn = document.querySelectorAll(".cell-actions .btn-danger");
+  deleteGameBtn.forEach((btn)=>{
+    btn.addEventListener("click",(evento)=>{
+      evento.stopPropagation();
+      const id = parseInt(btn.dataset.id);
+      deleteGame(id);
+    })
+  })
+}
