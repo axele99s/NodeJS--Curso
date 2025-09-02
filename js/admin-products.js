@@ -57,6 +57,10 @@ const games = [
   
 ];
 
+const API_URL = "https://68b1c967a860fe41fd5f93a7.mockapi.io";
+
+let gamesList=[];
+
 import {formatDate} from './date-utils.js';
 const gamesForm = document.getElementById("gamesForm");
 const tableBody = document.getElementById("tableBody");
@@ -66,19 +70,46 @@ const categorySelect = document.querySelector("#categoryFilter");
 const sortBtn = document.querySelectorAll("[data-ord]");
 const aBtnDialog = document.querySelectorAll(".cell-name a");
 
-gamesForm.addEventListener("submit",(formulario) => {
-  formulario.preventDefault();
-  games.push({
-    id:games.length+1,
+
+async function getProducts(){
+  try{
+    const responde = await axios.get(`${API_URL}/products`);
+    gamesList = responde.data;
+    buildTable(gamesList);
+    
+  }
+  catch(error){
+    console.error("Error al traer los productos", error);
+    Swal.fire(
+      {icon: "error",
+      title: "Error!",
+      text: "No se pudieron cargar los productos, intente nuevamente.",
+      theme: "dark",
+    }
+    );
+  }
+}
+
+gamesForm.addEventListener("submit",async(formulario) => {
+ 
+  try {
+     formulario.preventDefault();
+  const newGame = {
     name:formulario.target.elements.title.value,
     price:formulario.target.elements.price.value,
     description:formulario.target.elements.description.value,
     category:formulario.target.elements.category.value,
     image:formulario.target.elements.image.value,
-    createdAt: new Date().toISOString()
-  })
+    createdAt: new Date().toISOString()};
 
-  buildTable(games);
+
+    const response = await axios.post(`${API_URL}/products`, newGame);
+
+
+
+  // games.push(newGame);
+  gamesList.push(response.data);
+  
   Swal.fire({
     icon: "success",
     title: "Carga correcta!",
@@ -86,6 +117,21 @@ gamesForm.addEventListener("submit",(formulario) => {
     toast: true,
     theme: "dark"
     })
+
+
+    getProducts();
+
+  } catch (error) {
+    console.error("Error al cargar el juego:", error);
+  Swal.fire(
+      {icon: "error",
+      title: "Error!",
+      text: "test.",
+      theme: "dark",
+    })}
+
+    
+  
   })
  
 function buildTable(arrayJuegos){
@@ -137,25 +183,65 @@ function buildTable(arrayJuegos){
   }
 
 
-function deleteGame(id){
-  const indice = games.findIndex(juego =>{
-    return juego.id===id;
-  })
-  const confirmed = confirm("Estas seguro que desear eliminar el juego?");
-  if(confirmed) {
-    games.splice(indice,1);
-    buildTable(games);
+async function deleteGame(id){
+
+
+  try{
+
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "Esta acción no se puede deshacer.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      theme: "dark",
+    }).then(async(result) => { 
+
+      if (result.isConfirmed) {
+        const responde = await axios.delete(`${API_URL}/products/${id}`);
+    
+
+        Swal.fire(
+          {icon: "success",
+          title: "Eliminado!",
+          text: "El juego ha sido eliminado.",
+          theme: "dark",
+        });
+    getProducts();
+      
+      }
+    })
+      
+    
+
+  
+  }catch(error){
+    console.error("Error al eliminar el juego", error);
+    Swal.fire(
+      {icon: "error",
+      title: "Error!",
+      text: "No se pudieron eliminar el juego.",
+      theme: "dark",
+    })
   }
+
+
+  
   
 }
 
-buildTable(games);
+// buildTable(games);
+getProducts();
+
 
 // search input, para buscar juegos
 searchInput.addEventListener("keyup",(evento)=>{
   const inputValue = searchInput.value;
   
-  const filteredGames = games.filter((juego)=>{
+  const filteredGames = gamesList.filter((juego)=>{
     if(juego.name.toLowerCase().includes(inputValue.toLowerCase())) return true; 
   }
   );
@@ -168,10 +254,10 @@ searchInput.addEventListener("keyup",(evento)=>{
 // category filter
 categorySelect.addEventListener("change",(evento)=>{
   if(categorySelect.value===""){
-    buildTable(games);
+    buildTable(gamesList);
     return;
   }
-  const filteredGames = games.filter((juego)=>{
+  const filteredGames = gamesList.filter((juego)=>{
     if(juego.category.toLowerCase()===categorySelect.value.toLowerCase()) return true ;
   })
   buildTable(filteredGames);
@@ -184,10 +270,10 @@ sortBtn.forEach((btn)=>{
     const dataSort = evento.currentTarget.dataset.ord;
 
     if(dataSort==="reset"){
-      buildTable(games);
+      buildTable(gamesList);
       return;
     }
-    const sortedGames = games.toSorted((a,b)=>{
+    const sortedGames = gamesList.toSorted((a,b)=>{
       if(dataSort==="asc") {
         return a.price - b.price;
       }
@@ -201,39 +287,39 @@ sortBtn.forEach((btn)=>{
 
 function showDialog(id){
 
-  const juego = games.find((jueguito) =>{
+  const juego = gamesList.find((jueguito) =>{
     
     return jueguito.id === id;
   })
 
-  Swal.fire({
-    title: juego.name,
-    /*color: "#fff",
-    text: juego.description,
-    imageAlt: juego.name,
-    background: "#333",*/
-    html: `
-          <div class="product-dialog">
-        <div class="image-container">
-            <img src="${juego.image}" alt="${juego.name}">
+  // Swal.fire({
+  //   title: juego.name,
+  //   /*color: "#fff",
+  //   text: juego.description,
+  //   imageAlt: juego.name,
+  //   background: "#333",*/
+  //   html: `
+  //         <div class="product-dialog">
+  //       <div class="image-container">
+  //           <img src="${juego.image}" alt="${juego.name}">
 
-        </div>
+  //       </div>
 
-        <div class="details-container">
+  //       <div class="details-container">
             
-            <div class="category-item">${juego.category}</div>
-            <div class="description">${juego.description}</div>
-            <div class="price">${juego.price}</div>
+  //           <div class="category-item">${juego.category}</div>
+  //           <div class="description">${juego.description}</div>
+  //           <div class="price">${juego.price}</div>
             
-            <div class="footer-wrapper">
-                <div class="date">${formatDate(juego.createdAt)}</div>
-                <button class="btn btn-primary">Editar</button>
-            </div>
-        </div>
-    </div>
-           `,
-    theme: "dark"
-  })
+  //           <div class="footer-wrapper">
+  //               <div class="date">${formatDate(juego.createdAt)}</div>
+  //               <button class="btn btn-primary">Editar</button>
+  //           </div>
+  //       </div>
+  //   </div>
+  //          `,
+  //   theme: "dark"
+  // })
   
 
 }
